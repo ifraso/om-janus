@@ -1,0 +1,65 @@
+# Janus Migration Configuration Example
+# This file shows how to use the 'migrate' command to export from Ops Manager/Cloud Manager
+# and import directly to Atlas in one step
+
+# ============================================================================
+# DATABASE USERS MIGRATION (Ops Manager/Cloud Manager to Atlas)
+# ============================================================================
+
+# Source: Ops Manager or Cloud Manager
+sourceUrl: https://cloud.mongodb.com  # or http://localhost:8080 for Ops Manager
+sourceUsername: source-api-public-key
+sourceApiKey: source-api-private-key
+
+# Destination: MongoDB Atlas
+destinationUrl: https://cloud.mongodb.com
+destinationUsername: atlas-api-public-key
+destinationApiKey: atlas-api-private-key
+
+# Files
+outputFile: dbUsers.json          # Intermediate export file
+passwordOutputFile: passwords.csv # Generated passwords output
+
+# Options
+skipExisting: true  # Skip users/roles that already exist in destination
+
+# ============================================================================
+# Usage:
+# ============================================================================
+# python -m janus db-users migrate --config config.migrate.example.yaml
+
+# ============================================================================
+# What happens:
+# ============================================================================
+# 1. EXPORT: Fetches database users and custom roles from source projects
+#    - Interactive selection of which projects to export
+#    - Saves to dbUsers.json
+#
+# 2. IMPORT: Creates users and roles in Atlas destination projects
+#    - Interactive mapping of source projects to destination projects
+#    - Generates random secure passwords for all users
+#    - Saves passwords to passwords.csv
+#
+# 3. Result: All users migrated with new passwords exported to CSV
+
+# ============================================================================
+# Security Notes:
+# ============================================================================
+# 1. Never commit this file with real API keys to version control
+# 2. Keep passwords.csv file secure - it contains plaintext passwords
+# 3. Rotate all passwords immediately after migration
+# 4. Delete passwords.csv after passwords have been rotated
+# 5. API keys need appropriate permissions:
+#    - Source: Project Read Only or higher
+#    - Destination: Project Owner or higher (to create users and roles)
+
+# ============================================================================
+# Alternative: Separate Export and Import
+# ============================================================================
+# If you prefer to run export and import separately:
+#
+# Export only:
+#   python -m janus db-users export --config config.yaml
+#
+# Import only:
+#   python -m janus db-users import --config config.yaml
