@@ -1,7 +1,8 @@
+from typing import Union
+
 import typer
 
 from janus import __app_name__, __version__, alert_configs_cli, db_users_cli
-
 from janus.logging import logger, setDebugLogLevel
 
 app = typer.Typer()
@@ -31,7 +32,7 @@ def _debug_logging_callback(value: bool) -> None:
 @app.callback()
 # @use_yaml_config(default_value="config.yaml")
 def main(
-    version: bool | None = typer.Option(
+    version: Union[bool, None] = typer.Option(
         None,
         "--version",
         "-v",
