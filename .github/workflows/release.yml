@@ -132,12 +132,11 @@ jobs:
       - name: Generate changelog
         id: changelog
         run: |
-          # Get commits since last tag (if any)
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          if [ -n "$LAST_TAG" ]; then
-            CHANGELOG=$(git log --oneline --pretty=format:"- %s" $LAST_TAG..HEAD || echo "- Initial release")
-          else
-            CHANGELOG="- Initial release"
+          # Get only the latest commit message
+          CHANGELOG=$(git log --oneline --pretty=format:"- %s" -1 HEAD 2>/dev/null)
+
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="- Release v${{ needs.check-version.outputs.current-version }}"
           fi
 
           # Save multiline output
@@ -162,17 +161,10 @@ jobs:
 
             ## Installation
 
-            **Download and run:**
             ```bash
             wget https://github.com/${{ github.repository }}/releases/download/v${{ needs.check-version.outputs.current-version }}/janus
             chmod +x janus
             ./janus version
-            ```
-
-            **Install globally (optional):**
-            ```bash
-            sudo mv janus /usr/local/bin/janus
-            janus --help
             ```
 
           draft: false
