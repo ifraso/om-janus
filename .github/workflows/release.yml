@@ -110,10 +110,24 @@ jobs:
           dist/janus version
           echo "Binary size: $(stat -c%s dist/janus | numfmt --to=iec)"
 
-          # Prepare final binary
-          cp dist/janus janus
-          chmod +x janus
-          ./janus version
+          # Debug current directory
+          echo "Current directory contents:"
+          ls -la .
+
+          # Remove any existing janus file/directory
+          rm -rf janus
+
+          # Prepare final binary with absolute paths
+          cp dist/janus janus-binary
+          chmod +x janus-binary
+
+          # Verify the copy worked
+          ls -la janus-binary
+          file janus-binary
+          ./janus-binary version
+
+          # Rename to final name
+          mv janus-binary janus
 
       - name: Generate changelog
         id: changelog
