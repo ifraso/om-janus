@@ -39,7 +39,7 @@ def get_verify_ssl_config(config: dict, key: str = "source") -> bool:
     return config.get("verify_ssl", True)
 
 
-from janus.projects import fetch_projects
+from janus.projects import fetch_projects, make_digest_request
 
 # Type aliases for common data structures
 JsonDict = dict[str, Any]
@@ -279,11 +279,8 @@ def fetch_automation_config(
     host: str, group: str, username: str, apikey: str, verify_ssl: bool = True
 ) -> JsonDict:
     """Fetch automation configuration from Ops Manager/Cloud Manager."""
-    response = requests.get(
-        host + "/api/public/v1.0/groups/" + group + "/automationConfig",
-        auth=HTTPDigestAuth(username, apikey),
-        verify=verify_ssl,
-    )
+    url = host + "/api/public/v1.0/groups/" + group + "/automationConfig"
+    response = make_digest_request("GET", url, username, apikey, verify_ssl)
     response.raise_for_status()
     automation_config: JsonDict = response.json()
     logger.debug("Fetched Automation Config for project %s", group)
