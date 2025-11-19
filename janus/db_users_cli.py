@@ -1,19 +1,17 @@
-from typing import Any
-
-import typer
-from typer_config import use_yaml_config
-
-import requests
-from requests.auth import HTTPDigestAuth
-
-from janus.logging import logger
-import json
 import csv
+import json
 import secrets
 import string
 from datetime import datetime
+from typing import Any
 
 import questionary
+import requests
+import typer
+from requests.auth import HTTPDigestAuth
+from typer_config import use_yaml_config
+
+from janus.logging import logger
 from janus.projects import fetch_projects
 
 # Type aliases for common data structures
@@ -50,7 +48,10 @@ def export(
     ),
 ) -> None:
     """Export Database Users and Custom Roles from Ops Manager/Cloud Manager to a JSON file."""
-    projects = fetch_projects(sourceUrl, sourceUsername, sourceApiKey)
+    source_verify_ssl = config.get("source", {}).get("verify_ssl", True)
+    projects = fetch_projects(
+        sourceUrl, sourceUsername, sourceApiKey, source_verify_ssl
+    )
 
     choices = []
     projectIdNameDict = {}
@@ -70,7 +71,13 @@ def export(
     ).ask()
 
     export_db_users_and_roles(
-        sourceUrl, answer, projectIdNameDict, sourceUsername, sourceApiKey, outputFile
+        sourceUrl,
+        answer,
+        projectIdNameDict,
+        sourceUsername,
+        sourceApiKey,
+        outputFile,
+        source_verify_ssl,
     )
 
 
@@ -177,7 +184,10 @@ def migrate(
     logger.info("")
 
     # Export phase
-    projects = fetch_projects(sourceUrl, sourceUsername, sourceApiKey)
+    source_verify_ssl = config.get("source", {}).get("verify_ssl", True)
+    projects = fetch_projects(
+        sourceUrl, sourceUsername, sourceApiKey, source_verify_ssl
+    )
 
     choices = []
     projectIdNameDict = {}
@@ -197,7 +207,13 @@ def migrate(
     ).ask()
 
     export_db_users_and_roles(
-        sourceUrl, answer, projectIdNameDict, sourceUsername, sourceApiKey, outputFile
+        sourceUrl,
+        answer,
+        projectIdNameDict,
+        sourceUsername,
+        sourceApiKey,
+        outputFile,
+        source_verify_ssl,
     )
 
     logger.info("")
@@ -223,12 +239,13 @@ def migrate(
 
 
 def fetch_automation_config(
-    host: str, group: str, username: str, apikey: str
+    host: str, group: str, username: str, apikey: str, verify_ssl: bool = True
 ) -> JsonDict:
     """Fetch automation configuration from Ops Manager/Cloud Manager."""
     response = requests.get(
         host + "/api/public/v1.0/groups/" + group + "/automationConfig",
         auth=HTTPDigestAuth(username, apikey),
+        verify=verify_ssl,
     )
     response.raise_for_status()
     automation_config: JsonDict = response.json()
@@ -299,6 +316,7 @@ def export_db_users_and_roles(
     username: str,
     apikey: str,
     outputFile: str,
+    verify_ssl: bool = True,
 ) -> None:
     """Export database users and custom roles for selected projects."""
     output: list[ProjectDict] = []
@@ -311,7 +329,9 @@ def export_db_users_and_roles(
         )
 
         try:
-            automation_config = fetch_automation_config(host, group, username, apikey)
+            automation_config = fetch_automation_config(
+                host, group, username, apikey, verify_ssl
+            )
 
             custom_roles = extract_custom_roles(automation_config)
             database_users = extract_database_users(automation_config)
@@ -387,7 +407,7 @@ def generate_secure_password(length: int = 20) -> str:
 
 
 def fetch_atlas_custom_roles(
-    atlasUrl: str, groupId: str, username: str, apikey: str
+    atlasUrl: str, groupId: str, username: str, apikey: str, verify_ssl: bool = True
 ) -> list[RoleDict]:
     """Fetch existing custom roles from Atlas."""
     headers = {
@@ -397,6 +417,7 @@ def fetch_atlas_custom_roles(
         atlasUrl + "/api/atlas/v2/groups/" + groupId + "/customDBRoles/roles",
         auth=HTTPDigestAuth(username, apikey),
         headers=headers,
+        verify=verify_ssl,
     )
     response.raise_for_status()
     roles_data: JsonDict = response.json()
@@ -410,7 +431,12 @@ def fetch_atlas_custom_roles(
 
 
 def create_atlas_custom_role(
-    atlasUrl: str, groupId: str, username: str, apikey: str, rolePayload: RoleDict
+    atlasUrl: str,
+    groupId: str,
+    username: str,
+    apikey: str,
+    rolePayload: RoleDict,
+    verify_ssl: bool = True,
 ) -> requests.Response:
     """Create a custom role in Atlas."""
     url = atlasUrl + "/api/atlas/v2/groups/" + groupId + "/customDBRoles/roles"
@@ -425,15 +451,16 @@ def create_atlas_custom_role(
     response = requests.post(
         url,
         auth=HTTPDigestAuth(username, apikey),
-        data=json.dumps(rolePayload),
         headers=headers,
+        data=json.dumps(rolePayload),
+        verify=verify_ssl,
     )
 
     return response
 
 
 def fetch_atlas_database_users(
-    atlasUrl: str, groupId: str, username: str, apikey: str
+    atlasUrl: str, groupId: str, username: str, apikey: str, verify_ssl: bool = True
 ) -> list[UserDict]:
     """Fetch existing database users from Atlas."""
     headers = {
@@ -443,6 +470,7 @@ def fetch_atlas_database_users(
         atlasUrl + "/api/atlas/v2/groups/" + groupId + "/databaseUsers",
         auth=HTTPDigestAuth(username, apikey),
         headers=headers,
+        verify=verify_ssl,
     )
     response.raise_for_status()
     users_data: JsonDict = response.json()
@@ -450,7 +478,12 @@ def fetch_atlas_database_users(
 
 
 def create_atlas_database_user(
-    atlasUrl: str, groupId: str, username: str, apikey: str, userPayload: UserDict
+    atlasUrl: str,
+    groupId: str,
+    username: str,
+    apikey: str,
+    userPayload: UserDict,
+    verify_ssl: bool = True,
 ) -> requests.Response:
     """Create a database user in Atlas."""
     url = atlasUrl + "/api/atlas/v2/groups/" + groupId + "/databaseUsers"
@@ -468,6 +501,7 @@ def create_atlas_database_user(
         auth=HTTPDigestAuth(username, apikey),
         data=json.dumps(userPayload),
         headers=headers,
+        verify=verify_ssl,
     )
 
     logger.debug("Response status code: %s", response.status_code)

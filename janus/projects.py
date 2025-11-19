@@ -6,9 +6,11 @@ from requests.auth import HTTPDigestAuth
 from janus.logging import logger
 
 
-def fetch_projects(host, username, apikey):
+def fetch_projects(host, username, apikey, verify_ssl=True):
     response = requests.get(
-        host + "/api/public/v1.0/groups", auth=HTTPDigestAuth(username, apikey)
+        host + "/api/public/v1.0/groups",
+        auth=HTTPDigestAuth(username, apikey),
+        verify=verify_ssl,
     )
     response.raise_for_status()
     projects = response.json()

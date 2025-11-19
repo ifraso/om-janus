@@ -32,7 +32,10 @@ def export(
     ),
 ) -> None:
     """Export Alert Configs to the specified output file using an Organization Key. The process will first obtain all the Projects in the Organization and provide the user a choice of which Project to export the Alert Configs from."""
-    projects = fetch_projects(sourceUrl, sourceUsername, sourceApiKey)
+    source_verify_ssl = config.get("source", {}).get("verify_ssl", True)
+    projects = fetch_projects(
+        sourceUrl, sourceUsername, sourceApiKey, source_verify_ssl
+    )
 
     choices = []
     projectIdNameDict = {}
@@ -51,8 +54,15 @@ def export(
         "Select projects to export Alert Configs from", choices=choices
     ).ask()
 
+    source_verify_ssl = config.get("source", {}).get("verify_ssl", True)
     export_alert_configs(
-        sourceUrl, answer, projectIdNameDict, sourceUsername, sourceApiKey, outputFile
+        sourceUrl,
+        answer,
+        projectIdNameDict,
+        sourceUsername,
+        sourceApiKey,
+        outputFile,
+        source_verify_ssl,
     )
 
 
@@ -89,10 +99,11 @@ def import_(
     )
 
 
-def fetch_alert_configs(host, group, username, apikey):
+def fetch_alert_configs(host, group, username, apikey, verify_ssl=True):
     response = requests.get(
         host + "/api/public/v1.0/groups/" + group + "/alertConfigs",
         auth=HTTPDigestAuth(username, apikey),
+        verify=verify_ssl,
     )
     response.raise_for_status()
     alert_configs = response.json()
@@ -101,10 +112,12 @@ def fetch_alert_configs(host, group, username, apikey):
     return alert_configs
 
 
-def export_alert_configs(host, groups, groupNameDict, username, apikey, outputFile):
+def export_alert_configs(
+    host, groups, groupNameDict, username, apikey, outputFile, verify_ssl=True
+):
     output = []
     for group in groups:
-        alert_configs = fetch_alert_configs(host, group, username, apikey)
+        alert_configs = fetch_alert_configs(host, group, username, apikey, verify_ssl)
         element = {
             "project": {"id": group, "name": groupNameDict[group]},
             "alertConfigs": [],
@@ -222,8 +235,13 @@ def __post_alert_configs(
     )
 
     if skipDuplicates:
+        dest_verify_ssl = config.get("destination", {}).get("verify_ssl", True)
         currentDestinationAlertConfigs = fetch_alert_configs(
-            destinationUrl, destinationGroupId, destinationUsername, destinationApikey
+            destinationUrl,
+            destinationGroupId,
+            destinationUsername,
+            destinationApikey,
+            dest_verify_ssl,
         )
         current_alert_configs = __alert_configs_create_payload_from_export_payload(
             currentDestinationAlertConfigs["results"]
@@ -263,11 +281,13 @@ def __post_alert_configs(
         logger.debug("%s", json.dumps(alert))
         logger.debug("---------------")
 
+        dest_verify_ssl = config.get("destination", {}).get("verify_ssl", True)
         response = requests.post(
             url,
             auth=HTTPDigestAuth(destinationUsername, destinationApikey),
             data=json.dumps(alert),
             headers=headers,
+            verify=dest_verify_ssl,
         )
         logger.debug("Response ...")
         logger.debug("%s", vars(response))
