@@ -85,7 +85,9 @@ jobs:
             python3-devel \
             gcc \
             git \
-            file
+            file \
+            tar \
+            gzip
           microdnf clean all
 
       - name: Install Python dependencies
