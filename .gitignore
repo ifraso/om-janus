@@ -36,8 +36,7 @@ venv.bak/
 # PYINSTALLER BUILD FILES
 # ===================================================================
 build/
-# Keep dist/ for the built executable
-# dist/
+dist/
 *.spec.bak
 
 # ===================================================================

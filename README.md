@@ -392,47 +392,58 @@ timestamp,source_project,source_project_id,destination_project,destination_proje
 
 For an example, see [docs/examples/passwords.example.csv](./docs/examples/passwords.example.csv).
 
-## Building Standalone Executable
+## Automated Builds
 
-If you want to build the standalone executable yourself:
+### GitHub Actions (Recommended)
 
-### Prerequisites
+This project uses **GitHub Actions** to automatically build Red Hat Enterprise Linux 9 binaries when the version changes:
 
+#### How it works:
+1. **Version Detection**: When you change the version in `janus/__init__.py`
+2. **Automatic Build**: GitHub Actions builds a RHEL9-compatible binary
+3. **Release Creation**: Creates a GitHub Release with the binary attached
+
+#### Usage:
 ```bash
-# Install PyInstaller
+# Change version to trigger build
+vim janus/__init__.py  # Change __version__ = "1.1" to "1.2"
+git commit -m "Release v1.2 - Added new features"
+git push origin main
+
+# GitHub Actions will automatically:
+# - Detect version change (1.1 → 1.2)  
+# - Build RHEL9 binary using Red Hat UBI9
+# - Create Release v1.2 with binary attached
+```
+
+#### Download the binary:
+```bash
+# Get latest release
+wget https://github.com/YOUR-USERNAME/om-janus/releases/latest/download/janus-rhel9
+chmod +x janus-rhel9
+./janus-rhel9 version
+```
+
+### Manual Build (Local Development)
+
+If you want to build locally for development:
+
+#### Prerequisites
+```bash
+# Install PyInstaller  
 pip install pyinstaller
 ```
 
-### Build Process
-
+#### Build Process
 ```bash
-# Full command (first time)
-pyinstaller --onefile --name janus --console \
-  --hidden-import yaml \
-  --hidden-import pyyaml \
-  --hidden-import questionary \
-  --hidden-import typer \
-  --hidden-import typer_config \
-  --hidden-import requests \
-  --hidden-import rich \
-  --hidden-import click \
-  --hidden-import json \
-  --hidden-import csv \
-  --hidden-import logging \
-  janus/__main__.py
-
-# Or use the spec file (after first build)
+# Use the spec file
 pyinstaller janus.spec
-```
 
-The executable will be created at `dist/janus` (~14MB).
-
-### Test the Build
-
-```bash
+# Test local build
 ./dist/janus version
-./dist/janus --help
 ```
+
+**Note**: Local builds are platform-specific. For Red Hat compatibility, use the GitHub Actions builds.
 
 ## Configuration Examples
 
@@ -456,16 +467,21 @@ Sample configuration files are available in the [docs/examples/](./docs/examples
 
 ```
 om-janus/
-├── dist/                  # Standalone executable
-│   └── janus             # PyInstaller binary (~14MB)
+├── .github/
+│   └── workflows/
+│       └── release.yml   # GitHub Actions workflow
 ├── janus/                # Python source code
+│   └── __init__.py       # Version defined here
 ├── docs/                 # Documentation and examples
 │   ├── examples/         # Configuration examples
 │   └── img/              # Documentation images
+├── janus.spec            # PyInstaller configuration
 ├── config.yaml           # Your configuration (create from examples)
 ├── requirements.txt      # Python dependencies
 └── README.md             # This file
 ```
+
+**Note**: `dist/` is excluded from git - binaries are distributed via GitHub Releases.
 
 ## Security Notes
 
