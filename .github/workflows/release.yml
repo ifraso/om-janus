@@ -112,14 +112,14 @@ jobs:
 
       - name: Prepare release binary
         run: |
-          cp dist/janus janus-rhel9
-          chmod +x janus-rhel9
+          cp dist/janus janus
+          chmod +x janus
 
       - name: Upload binary as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: janus-rhel9-v${{ needs.check-version.outputs.current-version }}
-          path: janus-rhel9
+          name: janus-v${{ needs.check-version.outputs.current-version }}
+          path: janus
           retention-days: 90
 
   create-release:
@@ -135,7 +135,7 @@ jobs:
       - name: Download binary
         uses: actions/download-artifact@v4
         with:
-          name: janus-rhel9-v${{ needs.check-version.outputs.current-version }}
+          name: janus-v${{ needs.check-version.outputs.current-version }}
 
       - name: Generate changelog
         id: changelog
@@ -160,46 +160,20 @@ jobs:
         if: github.ref == 'refs/heads/main'
         with:
           files: |
-            janus-rhel9
+            janus
           name: "Janus v${{ needs.check-version.outputs.current-version }}"
           tag_name: "v${{ needs.check-version.outputs.current-version }}"
           body: |
-            ## 🚀 Janus v${{ needs.check-version.outputs.current-version }}
+            ## Janus v${{ needs.check-version.outputs.current-version }}
 
-            **MongoDB Migration Tool for Red Hat Enterprise Linux 9**
-
-            ### 📋 Changes
             ${{ steps.changelog.outputs.changelog }}
 
-            ### 📦 Quick Installation
+            ### Installation
             ```bash
-            wget https://github.com/${{ github.repository }}/releases/download/v${{ needs.check-version.outputs.current-version }}/janus-rhel9
-            chmod +x janus-rhel9
-            ./janus-rhel9 version
+            wget https://github.com/${{ github.repository }}/releases/download/v${{ needs.check-version.outputs.current-version }}/janus
+            chmod +x janus
+            ./janus version
             ```
-
-            ### 🎯 Platform Support
-            - ✅ Red Hat Enterprise Linux 9
-            - ✅ CentOS Stream 9
-            - ✅ Rocky Linux 9
-            - ✅ AlmaLinux 9
-            - ✅ Oracle Linux 9
-
-            ### 🔧 Key Features
-            - **Alert Configurations**: Export/Import between Ops Manager instances
-            - **Database Users & Roles**: Migrate from Ops Manager/Cloud Manager to Atlas
-            - **Secure**: Random password generation with CSV export
-            - **Interactive**: Project selection and mapping
-            - **Standalone**: No Python installation required
-
-            ### 📚 Documentation
-            - [Usage Examples](https://github.com/${{ github.repository }}#running-janus)
-            - [Configuration Guide](https://github.com/${{ github.repository }}/tree/main/docs/examples)
-            - [Building from Source](https://github.com/${{ github.repository }}#building-standalone-executable)
-
-            ---
-
-            **Build Info:** `${{ github.sha }}` • **Platform:** Red Hat UBI9
 
           draft: false
           prerelease: false
@@ -209,5 +183,5 @@ jobs:
       - name: Success notification
         run: |
           echo "🎉 Release v${{ needs.check-version.outputs.current-version }} created successfully!"
-          echo "📦 Binary: janus-rhel9"
+          echo "📦 Binary: janus"
           echo "📍 URL: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.check-version.outputs.current-version }}"
