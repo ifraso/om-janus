@@ -65,8 +65,8 @@ jobs:
           echo "current=$CURRENT" >> $GITHUB_OUTPUT
           echo "previous=$PREVIOUS" >> $GITHUB_OUTPUT
 
-  build-rhel9:
-    name: Build for Red Hat Enterprise Linux 9
+  build-and-release:
+    name: Build and Release
     needs: check-version
     runs-on: ubuntu-latest
     if: needs.check-version.outputs.version-changed == 'true'
@@ -103,65 +103,17 @@ jobs:
           source /opt/janus-venv/bin/activate
           pyinstaller janus.spec
 
-      - name: Verify build
+      - name: Verify build and prepare binary
         run: |
           ls -la dist/
           file dist/janus
           dist/janus version
           echo "Binary size: $(stat -c%s dist/janus | numfmt --to=iec)"
 
-      - name: Prepare release binary
-        run: |
+          # Prepare final binary
           cp dist/janus janus
           chmod +x janus
-
-      - name: Verify binary before upload
-        run: |
-          ls -la janus
-          file janus
-          ./janus version || echo "Binary verification failed but continuing..."
-
-      - name: Upload binary as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: janus-v${{ needs.check-version.outputs.current-version }}
-          path: janus
-          retention-days: 90
-
-  create-release:
-    name: Create GitHub Release
-    needs: [check-version, build-rhel9]
-    runs-on: ubuntu-latest
-    if: needs.check-version.outputs.version-changed == 'true'
-    timeout-minutes: 10
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Wait for build artifact
-        run: |
-          echo "Waiting for build job to complete and artifact to be available..."
-          sleep 10
-
-      - name: Download binary
-        uses: actions/download-artifact@v4
-        with:
-          name: janus-v${{ needs.check-version.outputs.current-version }}
-          path: .
-
-      - name: Verify downloaded artifact
-        run: |
-          ls -la
-          if [ -f "janus" ]; then
-            echo "✅ Binary downloaded successfully"
-            file janus
-            chmod +x janus
-            ./janus version || echo "⚠️ Binary test failed"
-          else
-            echo "❌ Binary not found after download"
-            exit 1
-          fi
+          ./janus version
 
       - name: Generate changelog
         id: changelog
