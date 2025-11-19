@@ -1,13 +1,12 @@
-# Python
+# ===================================================================
+# PYTHON
+# ===================================================================
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-build/
 develop-eggs/
-dist/
-downloads/
 eggs/
 .eggs/
 lib/
@@ -23,51 +22,118 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# Virtual Environment
+# ===================================================================
+# VIRTUAL ENVIRONMENTS
+# ===================================================================
 venv/
 env/
 ENV/
 env.bak/
 venv.bak/
+.venv/
 
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
+# ===================================================================
+# PYINSTALLER BUILD FILES
+# ===================================================================
+build/
+# Keep dist/ for the built executable
+# dist/
+*.spec.bak
 
-# Logs
-*.log
-log/
-logs/
-
-# Configuration files with sensitive data
+# ===================================================================
+# SENSITIVE CONFIGURATION & DATA FILES
+# ===================================================================
+# Configuration with real API keys
 config.yaml
+
+# Generated data files with sensitive info
+passwords.csv
+users.json
+alertConfigs.json
+*.csv
+*.json
+
+# Environment files
 *.env
 .env
 .env.local
 .env.*.local
 
-# Sensitive data files
-passwords.csv
-users.json
-*.csv
-*.json
-!requirements.json
-!package.json
+# Backup files that might contain sensitive data
+*.bak
+*.backup
+config.*.yaml
+config-*.yaml
 
-# Testing
+# ===================================================================
+# LOGS
+# ===================================================================
+*.log
+log/
+logs/
+janus.log
+
+# ===================================================================
+# IDE & EDITORS
+# ===================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.vim/
+.emacs.d/
+
+# ===================================================================
+# OS SPECIFIC
+# ===================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ===================================================================
+# TESTING & COVERAGE
+# ===================================================================
 .pytest_cache/
 .coverage
 htmlcov/
 .tox/
 .nox/
+.cache/
+pytest_cache/
+coverage.xml
+*.cover
+.hypothesis/
 
-# Jupyter Notebook
+# ===================================================================
+# DATABASE FILES
+# ===================================================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ===================================================================
+# TEMPORARY & CACHE FILES
+# ===================================================================
+tmp/
+temp/
+.tmp/
+*.tmp
+*.temp
+
+# ===================================================================
+# JUPYTER NOTEBOOK
+# ===================================================================
 .ipynb_checkpoints
 
+# ===================================================================
+# PYTHON TOOLS
+# ===================================================================
 # pyenv
 .python-version
 
@@ -79,10 +145,13 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# OS specific
-Thumbs.db
+# ===================================================================
+# SECURITY NOTE
+# ===================================================================
+# This .gitignore protects sensitive files like:
+# - config.yaml (contains API keys)
+# - passwords.csv (contains generated passwords)
+# - users.json (contains exported user data)
+# - *.log files (may contain sensitive debug info)
+#
+# NEVER commit these files to version control!

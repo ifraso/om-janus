@@ -1,20 +1,13 @@
-from typing import Optional
-
-import typer
-from typer_config import use_yaml_config
-
-import requests
-from requests.auth import HTTPDigestAuth
-
-from janus import __app_name__, __version__
-
-
-from janus.logging import logger
-
 import copy
 import json
 
 import questionary
+import requests
+import typer
+from requests.auth import HTTPDigestAuth
+from typer_config import use_yaml_config
+
+from janus.logging import logger
 from janus.projects import fetch_projects
 
 app = typer.Typer(help="Import/Export Alert Configs")
@@ -254,7 +247,7 @@ def __post_alert_configs(
             else:
                 ac = None
 
-            if ac != None:
+            if ac is not None:
                 skipped_alerts += 1
                 continue
 

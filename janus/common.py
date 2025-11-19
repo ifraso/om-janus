@@ -3,8 +3,6 @@ from click.core import ParameterSource
 from click.types import BOOL
 from rich.prompt import Prompt
 
-from janus.logging import logger
-
 
 def confirm_option_callback(ctx: typer.Context, param: typer.CallbackParam, value):
     # Only prompt if the value came from DEFAULT_MAP (config file) AND it's not a required value

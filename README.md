@@ -10,21 +10,40 @@ In ancient Roman religion and myth, [Janus](https://en.wikipedia.org/wiki/Janus)
 
 ## Python Versions
 
-Developed and tested using,
+Developed and tested using:
 
-- Python v3.11.5
-- Pip v23.3.2
+- Python v3.14.0
+- Pip v23.3.2+
 
 ## Installation
+
+### Option 1: From Source (Development)
 
 ```bash
 git clone https://github.com/edmallia/om-janus.git
 cd om-janus
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+### Option 2: Standalone Executable (Recommended for Users)
+
+If you have a pre-built executable:
+
+```bash
+# Make executable (macOS/Linux)
+chmod +x dist/janus
+
+# Test installation
+./dist/janus version
+```
+
 ## Running Janus
-### Check version
+
+### Using Python (Source Installation)
+
+#### Check version
 
 ```bash
 python -m janus version
@@ -32,7 +51,7 @@ python -m janus version
 
 ![version](./docs/img/version.png)
 
-### Show help
+#### Show help
 
 ```bash
 python -m janus --help
@@ -40,10 +59,26 @@ python -m janus --help
 
 ![help](./docs/img/help.png)
 
+### Using Standalone Executable
+
+```bash
+# Check version
+./dist/janus version
+
+# Show help
+./dist/janus --help
+```
+
+## Alert Configurations
+
 ### Show help for Alert Configs subcommand
 
 ```bash
+# Python
 python -m janus alert-configs --help
+
+# Executable
+./dist/janus alert-configs --help
 ```
 
 ![alertconfighelp](./docs/img/alertconfighelp.png)
@@ -55,7 +90,11 @@ You must provide either a configuration file or all required parameters via comm
 **Using a Configuration file (recommended):**
 
 ```bash
+# Python
 python -m janus alert-configs export --config config.yaml
+
+# Executable
+./dist/janus alert-configs export --config config.yaml
 ```
 
 ![exportwithconfig](./docs/img/exportwithconfig.png)
@@ -63,7 +102,15 @@ python -m janus alert-configs export --config config.yaml
 **Using command line options:**
 
 ```bash
+# Python
 python -m janus alert-configs export \
+  --sourceUrl https://opsmanager.example.com \
+  --sourceUsername myuser \
+  --sourceApiKey xxxx-xxxx-xxxx \
+  --outputFile alertConfigs.json
+
+# Executable
+./dist/janus alert-configs export \
   --sourceUrl https://opsmanager.example.com \
   --sourceUsername myuser \
   --sourceApiKey xxxx-xxxx-xxxx \
@@ -74,14 +121,27 @@ python -m janus alert-configs export \
 
 **Using a Configuration file (recommended):**
 
-``` bash
+```bash
+# Python
 python -m janus alert-configs import --config config.yaml
+
+# Executable
+./dist/janus alert-configs import --config config.yaml
 ```
 
 **Using command line options:**
 
 ```bash
+# Python
 python -m janus alert-configs import \
+  --destinationUrl https://opsmanager.example.com \
+  --destinationUsername myuser \
+  --destinationApiKey yyyy-yyyy-yyyy \
+  --inputFile alertConfigs.json \
+  --detectAndSkipDuplicates true
+
+# Executable
+./dist/janus alert-configs import \
   --destinationUrl https://opsmanager.example.com \
   --destinationUsername myuser \
   --destinationApiKey yyyy-yyyy-yyyy \
@@ -91,20 +151,22 @@ python -m janus alert-configs import \
 
 ![importwithconfig](./docs/img/importwithconfig.png)
 
-### Sample Configuration file
+### Sample Configuration file for Alert Configs
 
 ```yaml
-sourceUrl: http://localhost:8080
-sourceUsername: xxxxxxxx
-sourceApiKey: 00000000-0000-0000-0000-000000000000
+sourceUrl: https://cloud.mongodb.com
+sourceUsername: your-api-public-key
+sourceApiKey: your-api-private-key
 outputFile: alertConfigs.json
 
-destinationUrl: http://localhost:8080
-destinationUsername: xxxxxxxx
-destinationApiKey: 00000000-0000-0000-0000-000000000000
+destinationUrl: https://cloud.mongodb.com
+destinationUsername: your-atlas-api-public-key
+destinationApiKey: your-atlas-api-private-key
 detectAndSkipDuplicates: true
 inputFile: alertConfigs.json
 ```
+
+For more examples, see [docs/examples/config.yaml.example](./docs/examples/config.yaml.example).
 
 ## Database Users and Roles Migration
 
@@ -132,7 +194,11 @@ Janus can export database users and custom roles from Ops Manager or Cloud Manag
 ### Show help for Database Users subcommand
 
 ```bash
+# Python
 python -m janus db-users --help
+
+# Executable
+./dist/janus db-users --help
 ```
 
 ### Migrate Database Users and Roles (Export + Import in one step)
@@ -142,13 +208,30 @@ The **migrate** command performs both export and import in a single operation, m
 **Using a Configuration file (recommended):**
 
 ```bash
-python -m janus db-users migrate --config config.migrate.yaml
+# Python
+python -m janus db-users migrate --config config.yaml
+
+# Executable
+./dist/janus db-users migrate --config config.yaml
 ```
 
 **Using command line options:**
 
 ```bash
+# Python
 python -m janus db-users migrate \
+  --sourceUrl https://cloud.mongodb.com \
+  --sourceUsername source-user \
+  --sourceApiKey source-xxxx-xxxx \
+  --destinationUrl https://cloud.mongodb.com \
+  --destinationUsername atlas-user \
+  --destinationApiKey atlas-yyyy-yyyy \
+  --outputFile dbUsers.json \
+  --passwordOutputFile passwords.csv \
+  --skipExisting true
+
+# Executable
+./dist/janus db-users migrate \
   --sourceUrl https://cloud.mongodb.com \
   --sourceUsername source-user \
   --sourceApiKey source-xxxx-xxxx \
@@ -173,13 +256,25 @@ You must provide either a configuration file or all required parameters via comm
 **Using a Configuration file (recommended):**
 
 ```bash
+# Python
 python -m janus db-users export --config config.yaml
+
+# Executable
+./dist/janus db-users export --config config.yaml
 ```
 
 **Using command line options:**
 
 ```bash
+# Python
 python -m janus db-users export \
+  --sourceUrl https://cloud.mongodb.com \
+  --sourceUsername myuser \
+  --sourceApiKey xxxx-xxxx-xxxx \
+  --outputFile dbUsers.json
+
+# Executable
+./dist/janus db-users export \
   --sourceUrl https://cloud.mongodb.com \
   --sourceUsername myuser \
   --sourceApiKey xxxx-xxxx-xxxx \
@@ -199,13 +294,27 @@ You must provide either a configuration file or all required parameters via comm
 **Using a Configuration file (recommended):**
 
 ```bash
+# Python
 python -m janus db-users import --config config.yaml
+
+# Executable
+./dist/janus db-users import --config config.yaml
 ```
 
 **Using command line options:**
 
 ```bash
+# Python
 python -m janus db-users import \
+  --destinationUrl https://cloud.mongodb.com \
+  --destinationUsername atlasuser \
+  --destinationApiKey yyyy-yyyy-yyyy \
+  --inputFile dbUsers.json \
+  --passwordOutputFile passwords.csv \
+  --skipExisting true
+
+# Executable
+./dist/janus db-users import \
   --destinationUrl https://cloud.mongodb.com \
   --destinationUsername atlasuser \
   --destinationApiKey yyyy-yyyy-yyyy \
@@ -263,6 +372,8 @@ passwordOutputFile: passwords.csv
 skipExisting: true
 ```
 
+For more configuration examples, see [docs/examples/config.migrate.example.yaml](./docs/examples/config.migrate.example.yaml).
+
 ### Password CSV Format
 
 The generated password CSV file contains the following columns:
@@ -279,7 +390,60 @@ timestamp,source_project,source_project_id,destination_project,destination_proje
 4. **Rotate all passwords** using Atlas UI or API
 5. **Delete the password file** after rotation
 
-### Limitations
+For an example, see [docs/examples/passwords.example.csv](./docs/examples/passwords.example.csv).
+
+## Building Standalone Executable
+
+If you want to build the standalone executable yourself:
+
+### Prerequisites
+
+```bash
+# Install PyInstaller
+pip install pyinstaller
+```
+
+### Build Process
+
+```bash
+# Full command (first time)
+pyinstaller --onefile --name janus --console \
+  --hidden-import yaml \
+  --hidden-import pyyaml \
+  --hidden-import questionary \
+  --hidden-import typer \
+  --hidden-import typer_config \
+  --hidden-import requests \
+  --hidden-import rich \
+  --hidden-import click \
+  --hidden-import json \
+  --hidden-import csv \
+  --hidden-import logging \
+  janus/__main__.py
+
+# Or use the spec file (after first build)
+pyinstaller janus.spec
+```
+
+The executable will be created at `dist/janus` (~14MB).
+
+### Test the Build
+
+```bash
+./dist/janus version
+./dist/janus --help
+```
+
+## Configuration Examples
+
+Sample configuration files are available in the [docs/examples/](./docs/examples/) directory:
+
+- [config.yaml.example](./docs/examples/config.yaml.example) - Basic configuration
+- [config.migrate.example.yaml](./docs/examples/config.migrate.example.yaml) - Migration configuration
+- [dbUsers.example.json](./docs/examples/dbUsers.example.json) - Example exported users
+- [passwords.example.csv](./docs/examples/passwords.example.csv) - Example password file
+
+## Limitations
 
 - Only password-based (SCRAM) authentication is supported
 - x.509, AWS IAM, LDAP, and OIDC authentication methods are not supported
@@ -287,3 +451,28 @@ timestamp,source_project,source_project_id,destination_project,destination_proje
 - Authentication restrictions are not migrated
 - Passwords are randomly generated and cannot preserve original passwords
 - Custom roles must not conflict with Atlas built-in roles
+
+## Project Structure
+
+```
+om-janus/
+├── dist/                  # Standalone executable
+│   └── janus             # PyInstaller binary (~14MB)
+├── janus/                # Python source code
+├── docs/                 # Documentation and examples
+│   ├── examples/         # Configuration examples
+│   └── img/              # Documentation images
+├── config.yaml           # Your configuration (create from examples)
+├── requirements.txt      # Python dependencies
+└── README.md             # This file
+```
+
+## Security Notes
+
+🔒 **IMPORTANT**: Never commit these files to version control:
+- `config.yaml` (contains API keys)
+- `passwords.csv` (contains generated passwords)
+- `users.json` (contains exported user data)
+- `*.log` files (may contain sensitive debug info)
+
+The `.gitignore` file is configured to protect these sensitive files automatically.

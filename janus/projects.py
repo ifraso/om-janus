@@ -1,13 +1,15 @@
+import json
+
 import requests
 from requests.auth import HTTPDigestAuth
 
 from janus.logging import logger
-import json
 
 
 def fetch_projects(host, username, apikey):
-    response = requests.get(host+"/api/public/v1.0/groups",
-                            auth=HTTPDigestAuth(username, apikey))
+    response = requests.get(
+        host + "/api/public/v1.0/groups", auth=HTTPDigestAuth(username, apikey)
+    )
     response.raise_for_status()
     projects = response.json()
     logger.debug("Fetched Projects ...")
