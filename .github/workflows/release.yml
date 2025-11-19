@@ -2,8 +2,14 @@ name: Release on Version Change
 
 on:
   push:
-    branches: [main]
+    branches: [main, test]
   workflow_dispatch:
+    inputs:
+      force_build:
+        description: "Force build even if version unchanged"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   check-version:
@@ -40,6 +46,7 @@ jobs:
         run: |
           CURRENT="${{ steps.current.outputs.version }}"
           PREVIOUS="${{ steps.previous.outputs.version }}"
+          FORCE_BUILD="${{ github.event.inputs.force_build }}"
 
           if [ "$CURRENT" != "$PREVIOUS" ] && [ "$PREVIOUS" != "unknown" ]; then
             echo "changed=true" >> $GITHUB_OUTPUT
@@ -47,6 +54,9 @@ jobs:
           elif [ "$PREVIOUS" = "unknown" ]; then
             echo "changed=true" >> $GITHUB_OUTPUT
             echo "✅ First version detected: $CURRENT"
+          elif [ "$FORCE_BUILD" = "true" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "🔧 Force build enabled: $CURRENT"
           else
             echo "changed=false" >> $GITHUB_OUTPUT
             echo "ℹ️ Version unchanged: $CURRENT"
@@ -142,6 +152,7 @@ jobs:
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
+        if: github.ref == 'refs/heads/main'
         with:
           files: |
             janus-rhel9
