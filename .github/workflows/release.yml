@@ -153,18 +153,26 @@ jobs:
         with:
           files: |
             janus
-          name: "Janus v${{ needs.check-version.outputs.current-version }}"
+          name: "v${{ needs.check-version.outputs.current-version }}"
           tag_name: "v${{ needs.check-version.outputs.current-version }}"
           body: |
-            ## Janus v${{ needs.check-version.outputs.current-version }}
+            ## Release Notes
 
             ${{ steps.changelog.outputs.changelog }}
 
-            ### Installation
+            ## Installation
+
+            **Download and run:**
             ```bash
             wget https://github.com/${{ github.repository }}/releases/download/v${{ needs.check-version.outputs.current-version }}/janus
             chmod +x janus
             ./janus version
+            ```
+
+            **Install globally (optional):**
+            ```bash
+            sudo mv janus /usr/local/bin/janus
+            janus --help
             ```
 
           draft: false
