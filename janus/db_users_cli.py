@@ -3,15 +3,42 @@ import json
 import secrets
 import string
 from datetime import datetime
-from typing import Any
+from typing import Any, Union
 
 import questionary
 import requests
 import typer
+import yaml
 from requests.auth import HTTPDigestAuth
 from typer_config import use_yaml_config
 
 from janus.logging import logger
+
+
+def load_config_file() -> dict:
+    """Load config from config.yaml file as fallback for PyInstaller builds."""
+    try:
+        with open("config.yaml", "r") as file:
+            return yaml.safe_load(file) or {}
+    except FileNotFoundError:
+        logger.warning("No config.yaml file found, using defaults")
+        return {}
+    except Exception as e:
+        logger.warning(f"Failed to load config.yaml: {e}, using defaults")
+        return {}
+
+
+def get_verify_ssl_config(config: dict, key: str = "source") -> bool:
+    """Get verify_ssl config from either nested or root level configuration."""
+    # First try nested format: config["source"]["verify_ssl"]
+    nested_config = config.get(key, {})
+    if isinstance(nested_config, dict) and "verify_ssl" in nested_config:
+        return nested_config["verify_ssl"]
+
+    # Fall back to root level: config["verify_ssl"]
+    return config.get("verify_ssl", True)
+
+
 from janus.projects import fetch_projects
 
 # Type aliases for common data structures
@@ -48,7 +75,12 @@ def export(
     ),
 ) -> None:
     """Export Database Users and Custom Roles from Ops Manager/Cloud Manager to a JSON file."""
-    source_verify_ssl = config.get("source", {}).get("verify_ssl", True)
+    try:
+        source_verify_ssl = get_verify_ssl_config(config, "source")
+    except NameError:
+        # Fallback for PyInstaller builds where @use_yaml_config() may not work
+        config = load_config_file()
+        source_verify_ssl = get_verify_ssl_config(config, "source")
     projects = fetch_projects(
         sourceUrl, sourceUsername, sourceApiKey, source_verify_ssl
     )
@@ -184,7 +216,12 @@ def migrate(
     logger.info("")
 
     # Export phase
-    source_verify_ssl = config.get("source", {}).get("verify_ssl", True)
+    try:
+        source_verify_ssl = get_verify_ssl_config(config, "source")
+    except NameError:
+        # Fallback for PyInstaller builds where @use_yaml_config() may not work
+        config = load_config_file()
+        source_verify_ssl = get_verify_ssl_config(config, "source")
     projects = fetch_projects(
         sourceUrl, sourceUsername, sourceApiKey, source_verify_ssl
     )
@@ -407,7 +444,7 @@ def generate_secure_password(length: int = 20) -> str:
 
 
 def fetch_atlas_custom_roles(
-    atlasUrl: str, groupId: str, username: str, apikey: str, verify_ssl: bool = True
+    atlasUrl: str, groupId: str, username: str, apikey: str
 ) -> list[RoleDict]:
     """Fetch existing custom roles from Atlas."""
     headers = {
@@ -417,7 +454,6 @@ def fetch_atlas_custom_roles(
         atlasUrl + "/api/atlas/v2/groups/" + groupId + "/customDBRoles/roles",
         auth=HTTPDigestAuth(username, apikey),
         headers=headers,
-        verify=verify_ssl,
     )
     response.raise_for_status()
     roles_data: JsonDict = response.json()
@@ -436,7 +472,6 @@ def create_atlas_custom_role(
     username: str,
     apikey: str,
     rolePayload: RoleDict,
-    verify_ssl: bool = True,
 ) -> requests.Response:
     """Create a custom role in Atlas."""
     url = atlasUrl + "/api/atlas/v2/groups/" + groupId + "/customDBRoles/roles"
@@ -453,14 +488,13 @@ def create_atlas_custom_role(
         auth=HTTPDigestAuth(username, apikey),
         headers=headers,
         data=json.dumps(rolePayload),
-        verify=verify_ssl,
     )
 
     return response
 
 
 def fetch_atlas_database_users(
-    atlasUrl: str, groupId: str, username: str, apikey: str, verify_ssl: bool = True
+    atlasUrl: str, groupId: str, username: str, apikey: str
 ) -> list[UserDict]:
     """Fetch existing database users from Atlas."""
     headers = {
@@ -470,7 +504,6 @@ def fetch_atlas_database_users(
         atlasUrl + "/api/atlas/v2/groups/" + groupId + "/databaseUsers",
         auth=HTTPDigestAuth(username, apikey),
         headers=headers,
-        verify=verify_ssl,
     )
     response.raise_for_status()
     users_data: JsonDict = response.json()
@@ -483,7 +516,6 @@ def create_atlas_database_user(
     username: str,
     apikey: str,
     userPayload: UserDict,
-    verify_ssl: bool = True,
 ) -> requests.Response:
     """Create a database user in Atlas."""
     url = atlasUrl + "/api/atlas/v2/groups/" + groupId + "/databaseUsers"
@@ -501,7 +533,6 @@ def create_atlas_database_user(
         auth=HTTPDigestAuth(username, apikey),
         data=json.dumps(userPayload),
         headers=headers,
-        verify=verify_ssl,
     )
 
     logger.debug("Response status code: %s", response.status_code)
