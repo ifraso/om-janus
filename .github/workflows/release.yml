@@ -115,6 +115,12 @@ jobs:
           cp dist/janus janus
           chmod +x janus
 
+      - name: Verify binary before upload
+        run: |
+          ls -la janus
+          file janus
+          ./janus version || echo "Binary verification failed but continuing..."
+
       - name: Upload binary as artifact
         uses: actions/upload-artifact@v4
         with:
@@ -127,15 +133,35 @@ jobs:
     needs: [check-version, build-rhel9]
     runs-on: ubuntu-latest
     if: needs.check-version.outputs.version-changed == 'true'
+    timeout-minutes: 10
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Wait for build artifact
+        run: |
+          echo "Waiting for build job to complete and artifact to be available..."
+          sleep 10
+
       - name: Download binary
         uses: actions/download-artifact@v4
         with:
           name: janus-v${{ needs.check-version.outputs.current-version }}
+          path: .
+
+      - name: Verify downloaded artifact
+        run: |
+          ls -la
+          if [ -f "janus" ]; then
+            echo "✅ Binary downloaded successfully"
+            file janus
+            chmod +x janus
+            ./janus version || echo "⚠️ Binary test failed"
+          else
+            echo "❌ Binary not found after download"
+            exit 1
+          fi
 
       - name: Generate changelog
         id: changelog
